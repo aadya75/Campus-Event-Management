@@ -1,0 +1,27 @@
+:root { --bg:#f5f6fa; --card:#fff; --ink:#1f2430; --muted:#6b7280; --brand:#3b5bdb; --danger:#e03131; --ok:#2b8a3e; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--ink); }
+.container { max-width: 980px; margin: 0 auto; padding: 1.25rem; }
+.navbar { display:flex; justify-content:space-between; align-items:center; background:var(--brand); color:#fff; padding:.75rem 1.25rem; flex-wrap:wrap; gap:.5rem; }
+.navbar a { color:#fff; text-decoration:none; margin-right:1rem; }
+.navbar .brand { font-weight:700; font-size:1.25rem; }
+.navbar nav { display:flex; align-items:center; flex-wrap:wrap; }
+.navbar .muted { color:#dbe4ff; margin-right:.75rem; }
+.card { background:var(--card); border-radius:10px; padding:1rem 1.25rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; }
+.grid .card { margin:0; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:.75rem; flex-wrap:wrap; }
+.form { max-width:420px; margin:2rem auto; display:flex; flex-direction:column; gap:.75rem; }
+.form label { display:flex; flex-direction:column; gap:.25rem; font-size:.9rem; }
+input, select, textarea { padding:.55rem; border:1px solid #ced4da; border-radius:6px; font:inherit; }
+.filters { display:flex; gap:.5rem; margin-bottom:1rem; } .filters input { flex:1; }
+.btn { background:var(--brand); color:#fff; border:0; padding:.55rem 1rem; border-radius:6px; cursor:pointer; font:inherit; }
+.btn:disabled { background:#adb5bd; cursor:not-allowed; }
+.btn.small { padding:.3rem .7rem; font-size:.85rem; }
+.btn.danger { background:var(--danger); } .btn.ghost { background:#e7ebf5; color:var(--ink); }
+.muted { color:var(--muted); font-size:.9rem; }
+.error { color:var(--danger); background:#fff5f5; padding:.5rem .75rem; border-radius:6px; }
+.success { color:var(--ok); background:#ebfbee; padding:.5rem .75rem; border-radius:6px; }
+.tag { font-size:.75rem; background:#e7ebf5; padding:.15rem .5rem; border-radius:99px; }
+.badge { font-size:.7rem; padding:.15rem .5rem; border-radius:99px; color:#fff; vertical-align:middle; }
+.badge.Pending { background:#f08c00; } .badge.Approved { background:var(--ok); } .badge.Rejected { background:var(--danger); }
