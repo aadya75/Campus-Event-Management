@@ -3,70 +3,415 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
-const CATEGORIES = ['', 'General', 'Workshop', 'Talk', 'Cultural', 'Club', 'Sports'];
+const CATEGORIES = [
+  '',
+  'General',
+  'Workshop',
+  'Talk',
+  'Cultural',
+  'Club',
+  'Sports',
+];
 
 export default function Events() {
   const { user } = useAuth();
   const nav = useNavigate();
+
   const [events, setEvents] = useState([]);
   const [mine, setMine] = useState(new Set());
-  const [filters, setFilters] = useState({ q: '', category: '' });
-  const [msg, setMsg] = useState({ type: '', text: '' });
+
+  const [filters, setFilters] = useState({
+    q: '',
+    category: '',
+  });
+
+  const [msg, setMsg] = useState({
+    type: '',
+    text: '',
+  });
 
   const load = useCallback(async () => {
-    const params = new URLSearchParams({ upcoming: 'true' });
-    if (filters.q) params.set('q', filters.q);
-    if (filters.category) params.set('category', filters.category);
+    const params = new URLSearchParams({
+      upcoming: 'true',
+    });
+
+    if (filters.q) {
+      params.set('q', filters.q);
+    }
+
+    if (filters.category) {
+      params.set('category', filters.category);
+    }
+
     const d = await api(`/events?${params}`);
     setEvents(d.events);
+
     if (user?.role === 'student') {
       const r = await api('/registrations/mine');
-      setMine(new Set(r.registrations.map((x) => x.event_id)));
+
+      setMine(
+        new Set(
+          r.registrations.map((x) => x.event_id)
+        )
+      );
     }
   }, [filters, user]);
 
-  useEffect(() => { load().catch((e) => setMsg({ type: 'error', text: e.message })); }, [load]);
+  useEffect(() => {
+    load().catch((e) =>
+      setMsg({
+        type: 'error',
+        text: e.message,
+      })
+    );
+  }, [load]);
 
   const act = async (ev, register) => {
-    if (!user) return nav('/login');
+    if (!user) {
+      return nav('/login');
+    }
+
     try {
-      await api(`/events/${ev.id}/register`, { method: register ? 'POST' : 'DELETE' });
-      setMsg({ type: 'ok', text: register ? `Registered for "${ev.title}"` : 'Registration cancelled' });
+      await api(`/events/${ev.id}/register`, {
+        method: register ? 'POST' : 'DELETE',
+      });
+
+      setMsg({
+        type: 'ok',
+        text: register
+          ? `You're registered for "${ev.title}"`
+          : 'Registration cancelled',
+      });
+
       await load();
-    } catch (e) { setMsg({ type: 'error', text: e.message }); await load(); }
+    } catch (e) {
+      setMsg({
+        type: 'error',
+        text: e.message,
+      });
+
+      await load();
+    }
   };
 
   return (
-    <>
-      <h2>Upcoming Events</h2>
-      <div className="filters">
-        <input placeholder="Search events..." value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} />
-        <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c || 'All categories'}</option>)}
-        </select>
-      </div>
-      {msg.text && <p className={msg.type === 'error' ? 'error' : 'success'}>{msg.text}</p>}
-      {events.length === 0 && <p className="muted">No events found.</p>}
-      <div className="grid">
-        {events.map((ev) => {
-          const registered = mine.has(ev.id);
-          const full = ev.seats_available < 1;
-          return (
-            <article className="card" key={ev.id}>
-              <span className="tag">{ev.category}</span>
-              <h3>{ev.title}</h3>
-              <p>{ev.description}</p>
-              <p className="muted">{new Date(ev.event_date).toLocaleString()} · {ev.venue}</p>
-              <p><strong>{ev.seats_available}</strong> / {ev.capacity} seats left</p>
-              {(!user || user.role === 'student') && (
-                registered
-                  ? <button className="btn danger" onClick={() => act(ev, false)}>Cancel registration</button>
-                  : <button className="btn" disabled={full} onClick={() => act(ev, true)}>{full ? 'Event full' : 'Register'}</button>
-              )}
-            </article>
-          );
-        })}
-      </div>
-    </>
+    <div className="events-page">
+
+      {/* HERO */}
+      <section className="events-hero">
+
+        <div className="hero-content">
+          <div className="eyebrow">
+            <span></span>
+            CAMPUS EVENT MANAGEMENT SYSTEM
+          </div>
+
+          <h1>
+            Discover.
+            <br />
+            Connect.
+            <br />
+            Experience.
+          </h1>
+
+          <p>
+            Find workshops, talks, cultural events and
+            exciting experiences happening around campus.
+          </p>
+
+          <button
+            className="hero-button"
+            onClick={() =>
+              document
+                .getElementById('events-list')
+                ?.scrollIntoView({
+                  behavior: 'smooth',
+                })
+            }
+          >
+            Explore Events
+            <span>→</span>
+          </button>
+        </div>
+
+        <div className="hero-visual">
+          <div className="visual-orbit orbit-one"></div>
+          <div className="visual-orbit orbit-two"></div>
+
+          <div className="visual-card main-visual-card">
+            <div className="visual-icon">✦</div>
+
+            <div>
+              <span>YOUR CAMPUS</span>
+              <strong>YOUR EVENTS</strong>
+            </div>
+          </div>
+
+          <div className="floating-card floating-one">
+            <span>●</span>
+            Workshops
+          </div>
+
+          <div className="floating-card floating-two">
+            <span>✦</span>
+            Cultural
+          </div>
+
+          <div className="floating-card floating-three">
+            <span>→</span>
+            Discover
+          </div>
+        </div>
+
+      </section>
+
+      {/* EVENTS SECTION */}
+      <section
+        className="events-section"
+        id="events-list"
+      >
+
+        <div className="section-heading">
+          <div>
+            <div className="eyebrow">
+              <span></span>
+              WHAT'S HAPPENING
+            </div>
+
+            <h2>Upcoming Events</h2>
+
+            <p>
+              Explore what's happening on campus.
+            </p>
+          </div>
+
+          <div className="event-count">
+            {events.length}
+            <span>events</span>
+          </div>
+        </div>
+
+        {/* SEARCH */}
+        <div className="search-panel">
+
+          <div className="search-box">
+            <span>⌕</span>
+
+            <input
+              placeholder="Search events..."
+              value={filters.q}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  q: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          <select
+            value={filters.category}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                category: e.target.value,
+              })
+            }
+          >
+            {CATEGORIES.map((category) => (
+              <option
+                key={category}
+                value={category}
+              >
+                {category || 'All categories'}
+              </option>
+            ))}
+          </select>
+
+        </div>
+
+        {/* CATEGORY NAV */}
+        <div className="category-nav">
+
+          {CATEGORIES.map((category) => (
+            <button
+              key={category}
+              className={
+                filters.category === category
+                  ? 'active'
+                  : ''
+              }
+              onClick={() =>
+                setFilters({
+                  ...filters,
+                  category,
+                })
+              }
+            >
+              {category || 'All Events'}
+            </button>
+          ))}
+
+        </div>
+
+        {/* MESSAGE */}
+        {msg.text && (
+          <div
+            className={
+              msg.type === 'error'
+                ? 'message error'
+                : 'message success'
+            }
+          >
+            {msg.text}
+          </div>
+        )}
+
+        {/* NO EVENTS */}
+        {events.length === 0 && (
+          <div className="empty-state">
+            <div>✦</div>
+            <h3>No events found</h3>
+            <p>
+              Try another search or category.
+            </p>
+          </div>
+        )}
+
+        {/* EVENT CARDS */}
+        <div className="event-grid">
+
+          {events.map((ev) => {
+            const registered = mine.has(ev.id);
+            const full =
+              ev.seats_available < 1;
+
+            return (
+              <article
+                className="modern-event-card"
+                key={ev.id}
+              >
+
+                {/* IMAGE AREA */}
+                <div className="event-image">
+
+                  <div className="event-image-pattern"></div>
+
+                  <span className="event-category">
+                    {ev.category}
+                  </span>
+
+                  <span className="event-arrow">
+                    ↗
+                  </span>
+
+                </div>
+
+                {/* CONTENT */}
+                <div className="event-card-content">
+
+                  <h3>{ev.title}</h3>
+
+                  <p className="event-description">
+                    {ev.description}
+                  </p>
+
+                  <div className="event-details">
+
+                    <div>
+                      <span>DATE</span>
+                      <strong>
+                        {new Date(
+                          ev.event_date
+                        ).toLocaleDateString(
+                          undefined,
+                          {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          }
+                        )}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>VENUE</span>
+                      <strong>
+                        {ev.venue}
+                      </strong>
+                    </div>
+
+                  </div>
+
+                  <div className="event-footer">
+
+                    <div className="seat-info">
+                      <div className="seat-label">
+                        SEATS AVAILABLE
+                      </div>
+
+                      <strong>
+                        {ev.seats_available}
+                        <small>
+                          {' '}
+                          / {ev.capacity}
+                        </small>
+                      </strong>
+
+                      <div className="seat-line">
+                        <span
+                          style={{
+                            width: `${
+                              Math.min(
+                                100,
+                                (ev.seats_available /
+                                  ev.capacity) *
+                                  100
+                              )
+                            }%`,
+                          }}
+                        ></span>
+                      </div>
+                    </div>
+
+                    {(!user ||
+                      user.role === 'student') && (
+                      registered ? (
+                        <button
+                          className="register-button cancel"
+                          onClick={() =>
+                            act(ev, false)
+                          }
+                        >
+                          Cancel
+                        </button>
+                      ) : (
+                        <button
+                          className="register-button"
+                          disabled={full}
+                          onClick={() =>
+                            act(ev, true)
+                          }
+                        >
+                          {full
+                            ? 'Full'
+                            : 'Register'}
+                          <span>→</span>
+                        </button>
+                      )
+                    )}
+
+                  </div>
+
+                </div>
+              </article>
+            );
+          })}
+
+        </div>
+
+      </section>
+
+    </div>
   );
 }
