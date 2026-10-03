@@ -85,7 +85,6 @@ export default function Signup() {
         <select value={form.role} onChange={set('role')}>
           <option value="student">Student</option>
           <option value="organizer">Organizer</option>
-          <option value="admin">Admin</option>
         </select>
       </label>
 

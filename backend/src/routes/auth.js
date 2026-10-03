@@ -7,6 +7,7 @@ const { HttpError } = require('../middleware/errorHandler');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ALLOWED_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS || 'mnnit.ac.in').split(',').map(d => d.trim());
 
 const sign = (u) =>
   jwt.sign({ id: u.id, role: u.role }, process.env.JWT_SECRET, {
@@ -20,6 +21,9 @@ router.post('/signup', async (req, res, next) => {
     const { name, email, password, role = 'student' } = req.body;
     if (!name?.trim()) throw new HttpError(400, 'Name is required');
     if (!EMAIL_RE.test(email || '')) throw new HttpError(400, 'A valid email is required');
+    const emailDomain = email.split('@')[1]?.toLowerCase();
+    if (!ALLOWED_DOMAINS.includes(emailDomain))
+      throw new HttpError(400, `Email must be from an approved domain: ${ALLOWED_DOMAINS.join(', ')}`);
     if (!password || password.length < 8)
       throw new HttpError(400, 'Password must be at least 8 characters');
     if (!['student', 'organizer'].includes(role))
