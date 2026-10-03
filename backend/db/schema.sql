@@ -35,5 +35,14 @@ CREATE TABLE IF NOT EXISTS registrations (
   UNIQUE (student_id, event_id)
 );
 
+CREATE TABLE IF NOT EXISTS waitlist (
+  id            SERIAL PRIMARY KEY,
+  student_id    INTEGER     NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+  event_id      INTEGER     NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  joined_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (student_id, event_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_events_status_date ON events(status, event_date);
 CREATE INDEX IF NOT EXISTS idx_reg_event ON registrations(event_id);
+CREATE INDEX IF NOT EXISTS idx_waitlist_event ON waitlist(event_id, joined_at);

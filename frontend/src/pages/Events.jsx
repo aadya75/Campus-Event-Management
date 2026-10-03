@@ -19,6 +19,7 @@ export default function Events() {
 
   const [events, setEvents] = useState([]);
   const [mine, setMine] = useState(new Set());
+  const [waitlisted, setWaitlisted] = useState(new Set());
 
   const [filters, setFilters] = useState({
     q: '',
@@ -52,10 +53,16 @@ export default function Events() {
 
     if (user?.role === 'student') {
       const r = await api('/registrations/mine');
+      const w = await api('/waitlist/mine');
 
       setMine(
         new Set(
           r.registrations.map((x) => x.event_id)
+        )
+      );
+      setWaitlisted(
+        new Set(
+          w.waitlist.map((x) => x.event_id)
         )
       );
     }
@@ -71,23 +78,26 @@ export default function Events() {
     );
   }, [load]);
 
-  const act = async (ev, register) => {
+  const act = async (ev, action) => {
     if (!user) {
       return nav('/login');
     }
 
     setActionLoading(true);
     try {
-      await api(`/events/${ev.id}/register`, {
-        method: register ? 'POST' : 'DELETE',
-      });
-
-      setMsg({
-        type: 'ok',
-        text: register
-          ? `You're registered for "${ev.title}"`
-          : 'Registration cancelled',
-      });
+      if (action === 'register') {
+        await api(`/events/${ev.id}/register`, { method: 'POST' });
+        setMsg({ type: 'ok', text: `You're registered for "${ev.title}"` });
+      } else if (action === 'cancel') {
+        await api(`/events/${ev.id}/register`, { method: 'DELETE' });
+        setMsg({ type: 'ok', text: 'Registration cancelled' });
+      } else if (action === 'waitlist') {
+        await api(`/events/${ev.id}/waitlist`, { method: 'POST' });
+        setMsg({ type: 'ok', text: `You're on the waitlist for "${ev.title}"` });
+      } else if (action === 'leave-waitlist') {
+        await api(`/events/${ev.id}/waitlist`, { method: 'DELETE' });
+        setMsg({ type: 'ok', text: 'Left waitlist' });
+      }
 
       await load();
     } catch (e) {
@@ -299,8 +309,8 @@ export default function Events() {
 
           {events.map((ev) => {
             const registered = mine.has(ev.id);
-            const full =
-              ev.seats_available < 1;
+            const onWaitlist = waitlisted.has(ev.id);
+            const full = ev.seats_available < 1;
 
             return (
               <article
@@ -388,6 +398,12 @@ export default function Events() {
                           }}
                         ></span>
                       </div>
+
+                      {ev.waitlist_count > 0 && (
+                        <div className="waitlist-count">
+                          {ev.waitlist_count} on waitlist
+                        </div>
+                      )}
                     </div>
 
                     {(!user ||
@@ -397,24 +413,41 @@ export default function Events() {
                           className="register-button cancel"
                           disabled={actionLoading}
                           onClick={() =>
-                            act(ev, false)
+                            act(ev, 'cancel')
                           }
                         >
                           {actionLoading ? '...' : 'Cancel'}
                         </button>
+                      ) : onWaitlist ? (
+                        <button
+                          className="register-button cancel"
+                          disabled={actionLoading}
+                          onClick={() =>
+                            act(ev, 'leave-waitlist')
+                          }
+                        >
+                          {actionLoading ? '...' : 'Leave Waitlist'}
+                        </button>
+                      ) : full ? (
+                        <button
+                          className="register-button"
+                          disabled={actionLoading}
+                          onClick={() =>
+                            act(ev, 'waitlist')
+                          }
+                        >
+                          {actionLoading ? '...' : 'Join Waitlist'}
+                          <span>→</span>
+                        </button>
                       ) : (
                         <button
                           className="register-button"
-                          disabled={full || actionLoading}
+                          disabled={actionLoading}
                           onClick={() =>
-                            act(ev, true)
+                            act(ev, 'register')
                           }
                         >
-                          {actionLoading
-                            ? '...'
-                            : full
-                            ? 'Full'
-                            : 'Register'}
+                          {actionLoading ? '...' : 'Register'}
                           <span>→</span>
                         </button>
                       )

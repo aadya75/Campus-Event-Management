@@ -53,7 +53,9 @@ router.get('/', async (req, res, next) => {
     }
     if (upcoming === 'true') where.push('e.event_date >= now()');
     const { rows } = await query(
-      `SELECT e.*, u.name AS organizer_name FROM events e
+      `SELECT e.*, u.name AS organizer_name,
+       (SELECT COUNT(*) FROM waitlist w WHERE w.event_id = e.id) AS waitlist_count
+       FROM events e
        JOIN users u ON u.id = e.organizer_id
        WHERE ${where.join(' AND ')} ORDER BY e.event_date ASC`,
       params
@@ -93,7 +95,9 @@ router.get('/manage/list', authenticate, authorize('organizer', 'admin'), async 
 router.get('/:id(\\d+)', async (req, res, next) => {
   try {
     const { rows } = await query(
-      `SELECT e.*, u.name AS organizer_name FROM events e
+      `SELECT e.*, u.name AS organizer_name,
+       (SELECT COUNT(*) FROM waitlist w WHERE w.event_id = e.id) AS waitlist_count
+       FROM events e
        JOIN users u ON u.id = e.organizer_id WHERE e.id = $1 AND e.status = 'Approved'`,
       [req.params.id]
     );

@@ -1007,6 +1007,16 @@ body {
   border-radius: 10px;
 }
 
+.waitlist-count {
+  margin-top: 0.4rem;
+
+  font-size: 0.65rem;
+
+  color: #999;
+
+  font-weight: 600;
+}
+
 .register-button {
   border: 0;
 
