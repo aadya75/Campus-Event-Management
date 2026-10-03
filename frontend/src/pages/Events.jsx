@@ -30,7 +30,11 @@ export default function Events() {
     text: '',
   });
 
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+
   const load = useCallback(async () => {
+    setLoading(true);
     const params = new URLSearchParams({
       upcoming: 'true',
     });
@@ -55,6 +59,7 @@ export default function Events() {
         )
       );
     }
+    setLoading(false);
   }, [filters, user]);
 
   useEffect(() => {
@@ -71,6 +76,7 @@ export default function Events() {
       return nav('/login');
     }
 
+    setActionLoading(true);
     try {
       await api(`/events/${ev.id}/register`, {
         method: register ? 'POST' : 'DELETE',
@@ -91,6 +97,8 @@ export default function Events() {
       });
 
       await load();
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -267,8 +275,16 @@ export default function Events() {
           </div>
         )}
 
+        {/* LOADING */}
+        {loading && (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading events...</p>
+          </div>
+        )}
+
         {/* NO EVENTS */}
-        {events.length === 0 && (
+        {!loading && events.length === 0 && (
           <div className="empty-state">
             <div>✦</div>
             <h3>No events found</h3>
@@ -379,21 +395,24 @@ export default function Events() {
                       registered ? (
                         <button
                           className="register-button cancel"
+                          disabled={actionLoading}
                           onClick={() =>
                             act(ev, false)
                           }
                         >
-                          Cancel
+                          {actionLoading ? '...' : 'Cancel'}
                         </button>
                       ) : (
                         <button
                           className="register-button"
-                          disabled={full}
+                          disabled={full || actionLoading}
                           onClick={() =>
                             act(ev, true)
                           }
                         >
-                          {full
+                          {actionLoading
+                            ? '...'
+                            : full
                             ? 'Full'
                             : 'Register'}
                           <span>→</span>
