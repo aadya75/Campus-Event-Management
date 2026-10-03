@@ -12,11 +12,13 @@ function parseEvent(body) {
   const venue = (body.venue || '').trim();
   const capacity = Number.parseInt(body.capacity, 10);
   const date = new Date(body.event_date);
+  const image_url = (body.image_url || '').trim();
   if (!title) throw new HttpError(400, 'Title is required');
   if (!venue) throw new HttpError(400, 'Venue is required');
   if (Number.isNaN(date.getTime())) throw new HttpError(400, 'A valid event date is required');
   if (!Number.isInteger(capacity) || capacity < 1)
     throw new HttpError(400, 'Capacity must be a whole number of at least 1');
+  if (image_url && !isValidUrl(image_url)) throw new HttpError(400, 'Invalid image URL');
   return {
     title,
     venue,
@@ -24,7 +26,17 @@ function parseEvent(body) {
     event_date: date.toISOString(),
     description: (body.description || '').trim(),
     category: (body.category || 'General').trim() || 'General',
+    image_url: image_url || null,
   };
+}
+
+function isValidUrl(string) {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 /** Loads an event and checks the caller owns it (or is admin). */
@@ -114,9 +126,9 @@ router.post('/', authenticate, authorize('organizer', 'admin'), async (req, res,
     const e = parseEvent(req.body);
     const { rows } = await query(
       `INSERT INTO events (title, description, category, venue, event_date, capacity,
-                           seats_available, organizer_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$6,$7) RETURNING *`,
-      [e.title, e.description, e.category, e.venue, e.event_date, e.capacity, req.user.id]
+                           seats_available, organizer_id, image_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$6,$7,$8) RETURNING *`,
+      [e.title, e.description, e.category, e.venue, e.event_date, e.capacity, req.user.id, e.image_url]
     );
     res.status(201).json({ event: rows[0] });
   } catch (err) {
@@ -140,8 +152,8 @@ router.put('/:id(\\d+)', authenticate, authorize('organizer', 'admin'), async (r
       throw new HttpError(400, `Capacity cannot be lower than current registrations (${taken})`);
     const { rows } = await client.query(
       `UPDATE events SET title=$1, description=$2, category=$3, venue=$4, event_date=$5,
-              capacity=$6::int, seats_available=$6::int-$7::int WHERE id=$8 RETURNING *`,
-      [e.title, e.description, e.category, e.venue, e.event_date, e.capacity, taken, req.params.id]
+              capacity=$6::int, seats_available=$6::int-$7::int, image_url=$8 WHERE id=$9 RETURNING *`,
+      [e.title, e.description, e.category, e.venue, e.event_date, e.capacity, taken, e.image_url, req.params.id]
     );
     await client.query('COMMIT');
     res.json({ event: rows[0] });

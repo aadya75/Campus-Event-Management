@@ -12,6 +12,7 @@ export default function EventForm({ initial, onSubmit, onCancel }) {
     title: initial?.title || '', description: initial?.description || '',
     category: initial?.category || 'General', venue: initial?.venue || '',
     event_date: toLocalInput(initial?.event_date), capacity: initial?.capacity || 50,
+    image_url: initial?.image_url || '',
   });
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
@@ -28,6 +29,7 @@ export default function EventForm({ initial, onSubmit, onCancel }) {
       <label>Venue<input required value={f.venue} onChange={set('venue')} /></label>
       <label>Date & time<input type="datetime-local" required value={f.event_date} onChange={set('event_date')} /></label>
       <label>Seat capacity<input type="number" min="1" required value={f.capacity} onChange={set('capacity')} /></label>
+      <label>Image URL (optional)<input type="url" value={f.image_url} onChange={set('image_url')} placeholder="https://example.com/image.jpg" /></label>
       <div className="row"><button className="btn">Save</button><button type="button" className="btn ghost" onClick={onCancel}>Cancel</button></div>
     </form>
   );

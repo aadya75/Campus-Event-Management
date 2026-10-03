@@ -20,6 +20,7 @@ export default function Events() {
   const [events, setEvents] = useState([]);
   const [mine, setMine] = useState(new Set());
   const [waitlisted, setWaitlisted] = useState(new Set());
+  const [imageErrors, setImageErrors] = useState(new Set());
 
   const [filters, setFilters] = useState({
     q: '',
@@ -321,7 +322,16 @@ export default function Events() {
                 {/* IMAGE AREA */}
                 <div className="event-image">
 
-                  <div className="event-image-pattern"></div>
+                  {ev.image_url && !imageErrors.has(ev.id) ? (
+                    <img
+                      src={ev.image_url}
+                      alt={ev.title}
+                      className="event-image-img"
+                      onError={() => setImageErrors(new Set([...imageErrors, ev.id]))}
+                    />
+                  ) : (
+                    <div className="event-image-pattern"></div>
+                  )}
 
                   <span className="event-category">
                     {ev.category}

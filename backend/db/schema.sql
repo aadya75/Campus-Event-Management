@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS events (
   CHECK (seats_available <= capacity)
 );
 
+ALTER TABLE events ADD COLUMN IF NOT EXISTS image_url TEXT;
+
 CREATE TABLE IF NOT EXISTS registrations (
   id            SERIAL PRIMARY KEY,
   student_id    INTEGER     NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
